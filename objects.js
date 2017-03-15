@@ -86,20 +86,42 @@ function bullet(size, position, rotation,velocity, rotVel, timeToDeath){
 
 function asteroid(size, position,velocity, rotation, vel, rotVel){
 
+	var rand = Math.random();
 	var vertices = [
-	  // Front face
-	  1.0*size*Math.random(), -1.0*size*Math.random(),  -1.0*size*Math.random(),
-	   1.0*size*Math.random(), -1.0*size*Math.random(),  1.0*size*Math.random(),
-	   -1.0*size*Math.random(),  -1.0*size*Math.random(),  1.0*size*Math.random(),
-	  -1.0*size*Math.random(),  -1.0*size*Math.random(),  -1.0*size*Math.random(),
-	  
-	  // Back face
-	  1.0*size*Math.random(), 1.0*size*Math.random(), -1.0*size*Math.random(),
-	  1.0*size*Math.random(),  1.0*size*Math.random(), 1.0*size*Math.random(),
-	  -1.0*size*Math.random(),  1.0*size*Math.random(), 1.0*size*Math.random(),
-	  -1.0*size*Math.random(), 1.0*size*Math.random(), -1.0*size*Math.random(),
-	  
-	];
+	  1.0+size*rand, -1.0-size*rand,  -1.0-size*rand,
+	]
+	rand = Math.random();
+	vertices = vertices.concat([
+	   1.0+size*rand, -1.0-size*rand,  1.0+size*rand,
+	])
+	rand = Math.random();
+	vertices = vertices.concat([
+	  -1.0-size*rand,  -1.0-size*rand,  1.0+size*rand,
+	])
+	rand = Math.random();
+	vertices = vertices.concat([
+	   -1.0-size*rand,  -1.0-size*rand,  -1.0-size*rand
+	])
+	rand = Math.random();
+	vertices = vertices.concat([
+	  1.0+size*rand, 1.0+size*rand, -1.0-size*rand
+	])
+	rand = Math.random();
+	vertices = vertices.concat([
+	   1.0+size*rand,  1.0+size*rand, 1.0+size*rand,
+	])
+	rand = Math.random();
+	vertices = vertices.concat([
+	  -1.0-size*rand,  1.0+size*rand, 1.0+size*rand,
+	])
+	rand = Math.random();
+	vertices = vertices.concat([
+	   -1.0-size*rand, 1.0+size*rand, -1.0-size*rand,
+	])
+
+
+
+	
 	var colors = []
 	for (var i=0; i < 8; i++) {
 	  colors = colors.concat([.5-Math.random()/5, Math.random()/2, .8-Math.random()/3, 1.0]);
