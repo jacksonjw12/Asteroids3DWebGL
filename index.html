@@ -207,8 +207,11 @@ body {
 		//objects.push(cube);
 		var cube = cubeObject(1,new point3d(3,0,0), new point3d(0,0,0));
 		objects.push(cube);
-		var cube2 = cubeObject(.3,new point3d(-2,0,0), new point3d(0,0,0));
-		objects.push(cube2);
+		for(var j = 0; j<100; j++){
+
+            var cube2 = cubeObject(Math.random(),new point3d(Math.random()*20-10,Math.random()*20-10,Math.random()*20-10), new point3d(Math.random(),Math.random(),Math.random()));
+            objects.push(cube2);
+        }
 
 		/*
        squareVertexPositionBuffer = gl.createBuffer();
@@ -338,9 +341,9 @@ body {
 			rSquare += (75 * elapsed) / 1000.0;
 
 			for(var i =  0; i<objects.length; i++){
-				objects[i].rotation.x+=.1;
-				objects[i].rotation.y+=.1;
-				objects[i].rotation.z+=.1;
+				objects[i].rotation.x+=.01;
+				objects[i].rotation.y+=.01;
+				objects[i].rotation.z+=.01;
 			}
 			screenPos = Math.sin(ticks/100)*2
 
