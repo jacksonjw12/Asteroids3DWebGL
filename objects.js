@@ -405,12 +405,12 @@ function Keyboard(){
 		deltaf.add(deltal)
 		deltaf.scale(1/10)
 
-		var moveSpeed = 2;
+		var moveSpeed = 60;
 		camera.vel.add( deltaf )
 		
 		camera.rotation = prevRot;
 		
-		camera.position.add(camera.vel.copyScale(dt/30*moveSpeed))
+		camera.position.add(camera.vel.copyScale(dt/1000*moveSpeed))
 		//camera.position.add(new point3d(camera.rotation.x,camera.rotation));
 		//camera.vel = camera.vel.copyScale(1000/30*moveSpeed)
 		camera.vel.scale(.99)
