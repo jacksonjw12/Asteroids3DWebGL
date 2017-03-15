@@ -56,11 +56,10 @@ body {
 	gl.viewportWidth = c.width;
 	gl.viewportHeight = c.height;
 	var ticks = 0;
-	var camera = null;
+	var camera = new Camera();
 	var keyboard = new Keyboard();
     function webGLStart() {
         var canvas = document.getElementById("lesson01-canvas");
-        camera = new Camera()
         initShaders();
         initBuffers();
 
@@ -76,11 +75,27 @@ body {
     	requestAnimFrame(tick);
     	keyboard.doMovement(camera);
     	drawScene();
-    	animate();
+    	doPhysics();
 
     }
 
-
+    function spawnBullet(){
+        console.log(123)
+        var v = camera.vel.copyScale(1);
+        v.add(camera.forward().copyScale(20))
+        v.scale(-1)
+        
+        
+        var pos = camera.position.copyScale(-1);
+        var delPos = camera.forward().copyScale(-1.2);
+        
+        pos.add(delPos)
+        var b = bullet(.05,pos, camera.rotation,v,new point3d(0,1,0),10);
+       // var cube = bullet(1,new point3d(-camera.position.x,camera.position.y,0), new point3d(0,0,0),new point3d(0,0,0),new point3d(0,1,0),1);
+       b.isBullet = true;
+        objects.push(b);
+        
+    }
     function getShader(gl, id) {
         var shaderScript = document.getElementById(id);
         if (!shaderScript) {
@@ -205,11 +220,22 @@ body {
 		//var cube = new renderObject();
 		//cube.setup(gl,vertices,cubeVertexIndices,colors);
 		//objects.push(cube);
-		var cube = cubeObject(1,new point3d(3,0,0), new point3d(0,0,0));
+		var cube = bullet(1,new point3d(3,0,0), new point3d(0,0,0),new point3d(0,0,0),new point3d(0,1,0));
+        cube.timeToDeath = -1;//lives forever
 		objects.push(cube);
-		for(var j = 0; j<100; j++){
+        var startingAreaWidth = 200;
+        var size = 10;
+		for(var j = 0; j<200; j++){
 
-            var cube2 = cubeObject(Math.random(),new point3d(Math.random()*20-10,Math.random()*20-10,Math.random()*20-10), new point3d(Math.random(),Math.random(),Math.random()));
+
+            var cube2 = asteroid(
+                2+Math.random()*size,
+                new point3d((Math.random()-.5)*startingAreaWidth,(Math.random()-.5)*startingAreaWidth,(Math.random()-.5)*startingAreaWidth),
+                new point3d(Math.random(),Math.random(),Math.random()),
+                new point3d(Math.random(),Math.random(),Math.random()),
+                new point3d(Math.random(),Math.random(),Math.random()),
+                new point3d(Math.random()/2,Math.random()/2,Math.random()/2));
+
             objects.push(cube2);
         }
 
@@ -258,14 +284,14 @@ body {
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 300.0, pMatrix);
 
         mat4.identity(mvMatrix);
         //console.log(camera.position.x)     //   ad     ws   qe
-        mat4.translate(mvMatrix, [-1.5 + camera.position.x, 0.0+camera.position.y, -7.0+camera.position.z]);
+        mat4.translate(mvMatrix, [camera.position.x, camera.position.y, camera.position.z]);
 
-       	mat4.rotate(pMatrix, -camera.rotation.x, [1, 0, 0]);
-        mat4.rotate(pMatrix, camera.rotation.z, [0, 1, 0]);
+       	mat4.rotate(pMatrix, camera.rotation.x, [1, 0, 0]);
+        mat4.rotate(pMatrix, camera.rotation.y, [0, 1, 0]);
         //mat4.rotate(mvMatrix, camera.rotation.y, [0, 0, 1]);
 
         mvPushMatrix();
@@ -332,7 +358,7 @@ body {
     }
 
 	var lastTime = 0;
-	function animate() {
+	function doPhysics() {
 		var timeNow = new Date().getTime();
 		if (lastTime != 0) {
 			var elapsed = timeNow - lastTime;
@@ -341,11 +367,103 @@ body {
 			rSquare += (75 * elapsed) / 1000.0;
 
 			for(var i =  0; i<objects.length; i++){
-				objects[i].rotation.x+=.01;
-				objects[i].rotation.y+=.01;
-				objects[i].rotation.z+=.01;
+				camera.stepsSinceBullet++;
+                objects[i].rotation.add(objects[i].rotVel.copyScale(elapsed/1000))
+
+                objects[i].position.add(objects[i].velocity.copyScale(elapsed/1000))
+                if(objects[i].timeToDeath > 0){
+                    console.log(objects[i].timeToDeath)
+                    objects[i].timeToDeath-=elapsed/1000;
+                    if(objects[i].timeToDeath < 0){
+                        objects.splice(i,1);
+                    }
+
+                }
+
+
 			}
 			screenPos = Math.sin(ticks/100)*2
+
+
+
+        for(var i = 0; i < objects.length; i++){
+            
+
+            var isHit = function(obj1,obj2){
+                var xHit = true;
+                var yHit = true;
+                var zHit = true;
+
+
+                if(obj1.xRange[0] >obj2.xRange[1] || obj2.xRange[0] > obj1.xRange[1]){
+                    xHit = false;
+                }
+                if(obj1.yRange[0] >obj2.yRange[1] || obj2.yRange[0] > obj1.yRange[1]){
+                    yHit = false;
+                }
+                if(obj1.zRange[0] >obj2.zRange[1] || obj2.zRange[0] > obj1.zRange[1]){
+                    zHit = false;
+                }
+                
+                
+                if(xHit && yHit && zHit){
+                    
+                    return true;
+                }
+                return false;
+
+            }
+
+
+            if(objects[i].isBullet){//bullet hit physics
+                objects[i].getRanges();
+                for(var j = 0; j<objects.length;j++){
+                    if(!objects[j].isBullet && objects[i] != undefined){
+                        objects[j].getRanges();
+                        if(isHit(objects[i],objects[j])){
+                            //objects[i].timeToDeath = 0;
+                            objects.splice(i,1)
+                            objects[j].scale(.9);
+                            objects[j].hits++;
+                            if(objects[j].hits > 10){
+                                console.log("removed");
+                                if(i < j)
+                                    objects.splice(j-1,1);
+                                else
+                                    objects.splice(j,1);
+
+                            }
+                            break;
+
+
+                        }
+
+                        
+                        
+                        
+                    }
+                }
+            }
+            else{
+                var cam = {}
+                var sizeCam = 5;
+                cam.xRange = [camera.position.x-sizeCam,camera.position.x+sizeCam]
+                cam.yRange = [camera.position.y-sizeCam,camera.position.y+sizeCam]
+                cam.zRange = [camera.position.z-sizeCam,camera.position.z+sizeCam]
+                if(isHit(cam,objects[i])){
+                    camera.gotHit = true;
+                    if(camera.gotHitPunish < 10){
+                        camera.gotHitPunish = 15;
+
+                    }
+                }
+                
+            }
+
+        }
+        
+
+
 
 
 		}
