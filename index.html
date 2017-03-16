@@ -597,16 +597,27 @@ body {
                 }
             }
             else if(objects[i].isParticle){
-                objects[i].scale(.999)
+                objects[i].scale(0.9991)
             }
             else{
                 
                 if(isCamHit(objects[i]) ){
                     camera.gotHit = true;
                     if(camera.gotHitPunish <= 0){
+                        explosion(camera,new point3d(-camera.position.x,-camera.position.y,-camera.position.z),.1,1,2)
+
                         camera.gotHitPunish = 1500;
                         camera.hits++;
                         updateAsteroidHitCount(camera.hits);
+
+                        objects[i].scale(.9);
+                        objects[i].hits++;
+                        if(objects[i].hits > 10){
+                            console.log("removed");
+                           
+                            objects.splice(i,1);
+
+                        }
 
                     }
 

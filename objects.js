@@ -37,14 +37,25 @@ function cubeObject(size, position, rotation,velocity, rotVel){
 
 }
 
-function explosion(obj, pos){
-    var e = explosionObject(.1,pos,obj.rotation,new point3d(0,0,0), new point3d(0,0,0),1)
+function explosion(obj, pos, size, speed,timeToDeath){
+	
+	if(size == undefined){
 
-    objects = objects.concat(e)
+
+    	var e = explosionObject(.1,pos,obj.rotation,new point3d(0,0,0), new point3d(0,0,0),1,1)
+    	    objects = objects.concat(e)
+
+	}
+	else{
+		var e = explosionObject(size,pos,obj.rotation,new point3d(0,0,0), new point3d(0,0,0),timeToDeath,speed)
+		    objects = objects.concat(e)
+
+
+	}
    
 }
 
-function explosionObject(size, position, rotation,velocity, rotVel, timeToDeath){
+function explosionObject(size, position, rotation,velocity, rotVel, timeToDeath,speed){
 	var explosionObjects = []
 
 
@@ -62,10 +73,7 @@ function explosionObject(size, position, rotation,velocity, rotVel, timeToDeath)
 	  -1.0*size, 1.0*size, -1.0*size,
 	  
 	];
-	var colors = []
-	for (var c=0; c < 8; c++) {
-	  colors = colors.concat([1-Math.random()/2, Math.random()/2, Math.random()/2, 1.0]);
-	}
+	
 
 
 	var cubeVertexIndices = [
@@ -76,15 +84,19 @@ function explosionObject(size, position, rotation,velocity, rotVel, timeToDeath)
 	  2, 6, 7,     2, 7, 3,   // right
 	  4, 0, 3,     4, 3, 7    // left
 	];	
-
+	var colors = []
+	for (var c=0; c < 8; c++) {
+	  colors = colors.concat([1-Math.random()/2, Math.random()/2, Math.random()/2, 1.0]);
+	}
 	for(var i = 0; i< 8; i++){
 		for(var j= 0; j< 8; j++){
-
+			
 			
 			var newVel = new point3d(Math.cos(i*Math.PI/4),Math.sin(j*Math.PI/4),Math.sin(i*Math.PI/4) );
-			//newVel.scale(1/4);
+			
 			newVel.normalize();
-			console.log(newVel)
+			newVel.scale(speed);
+			//console.log(newVel)
 			var ex = new gameObject(position.copyScale(1),rotation,newVel,rotVel,vertices,cubeVertexIndices,colors, timeToDeath);
 			ex.isParticle = true;
 			explosionObjects.push(ex);
