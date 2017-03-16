@@ -4,12 +4,28 @@
 body {
 	margin:0;
 }
-
+#info {
+    position:absolute;
+    color:white;
+    width:100%;
+   
+    text-align:center;
+}
+#info * {
+     margin:0; 
+}
 
 </style>
+<script src="bunny.js"></script>
+<script src="TestScene.js"></script>
 <script type="text/javascript" src="webgl-utils.js"></script>
 <script src="glMatrix-0.9.5.min.js"></script>
 <body onload="webGLStart();">
+<div id="info">
+<h3>Asteroids 3D</h3>
+<h4>WASD and arrow keys to control, space to shoot</h5>
+<h5 id="hitText"> You have been hit by an asteroid 0 times</h6>
+</div>
 <canvas id="canvas"></canvas>
 
 
@@ -95,6 +111,11 @@ body {
        b.isBullet = true;
         objects.push(b);
         
+    }
+    function updateAsteroidHitCount(numHits){
+        var t = document.getElementById("hitText");
+        t.innerHTML = "You have been hit by an asteroid " + numHits + " times";
+
     }
     function getShader(gl, id) {
         var shaderScript = document.getElementById(id);
@@ -187,10 +208,7 @@ body {
 
 	var triangleVertexPositionBuffer;
 	var triangleVertexColorBuffer;
-	var squareVertexPositionBuffer;
-	var squareVertexColorBuffer;
-	var cubeVerticesIndexBuffer
-
+	
 	var objects = [];
     function initBuffers() {
         triangleVertexPositionBuffer = gl.createBuffer();
@@ -237,7 +255,19 @@ body {
                 new point3d(Math.random()/2,Math.random()/2,Math.random()/2));
 
             objects.push(cube2);
+
+
+             
         }
+
+        var testScene = modelFromObj(testSceneObj, new point3d(0,-10,0));
+        testScene.scale(1)
+        objects.push(testScene)
+
+        
+
+        //console.log(shipObj.renderObject.vertices)
+          //      console.log(shipObj.renderObject.indexes)
 
 		/*
        squareVertexPositionBuffer = gl.createBuffer();
@@ -289,7 +319,9 @@ body {
         mat4.identity(mvMatrix);
         //console.log(camera.position.x)     //   ad     ws   qe
         mat4.translate(mvMatrix, [camera.position.x, camera.position.y, camera.position.z]);
-
+        if(camera.gotHit){
+            mat4.translate(mvMatrix, [screenPos*Math.random(),screenPos*Math.random(),screenPos*Math.random()]);
+        }
        	mat4.rotate(pMatrix, camera.rotation.x, [1, 0, 0]);
         mat4.rotate(pMatrix, camera.rotation.y, [0, 1, 0]);
         //mat4.rotate(mvMatrix, camera.rotation.y, [0, 0, 1]);
@@ -327,7 +359,7 @@ body {
 			
 
 	        setMatrixUniforms();
-	        gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0);
+	        gl.drawElements(gl.TRIANGLES, objects[i].renderObject.indexes.length, gl.UNSIGNED_SHORT, 0);
 			
 	        mvPopMatrix();
 
@@ -362,17 +394,24 @@ body {
 		var timeNow = new Date().getTime();
 		if (lastTime != 0) {
 			var elapsed = timeNow - lastTime;
-
+            camera.stepsSinceBullet+=elapsed;
+           
+            if(camera.gotHitPunish > 0){
+                 camera.gotHitPunish-=elapsed;
+                 if(camera.gotHitPunish <= 0){
+                    camera.gotHit = false;
+                 }
+            }
 			rTri += (90 * elapsed) / 1000.0;
 			rSquare += (75 * elapsed) / 1000.0;
 
 			for(var i =  0; i<objects.length; i++){
-				camera.stepsSinceBullet++;
+
                 objects[i].rotation.add(objects[i].rotVel.copyScale(elapsed/1000))
 
                 objects[i].position.add(objects[i].velocity.copyScale(elapsed/1000))
                 if(objects[i].timeToDeath > 0){
-                    console.log(objects[i].timeToDeath)
+                    //console.log(objects[i].timeToDeath)
                     objects[i].timeToDeath-=elapsed/1000;
                     if(objects[i].timeToDeath < 0){
                         objects.splice(i,1);
@@ -387,7 +426,8 @@ body {
 
 
         for(var i = 0; i < objects.length; i++){
-            
+            objects[i].getRanges();
+
 
             var isHit = function(obj1,obj2){
                 var xHit = true;
@@ -413,10 +453,32 @@ body {
                 return false;
 
             }
+            var isCamHit = function(obj1){
+                var xHit = false;
+                var yHit = false;
+                var zHit = false;
+
+
+                if(obj1.xRange[0] < -camera.position.x &&  obj1.xRange[1]>-camera.position.x){
+                    xHit = true;
+                }
+                 if(obj1.yRange[0] < -camera.position.y &&  obj1.yRange[1]>-camera.position.y){
+                    yHit = true;
+                }
+                 if(obj1.zRange[0] < -camera.position.z &&  obj1.zRange[1]>-camera.position.z){
+                    zHit = true;
+                }
+                
+                
+                if(xHit && yHit && zHit){
+                    return true;
+                }
+                return false;
+
+            }
 
 
             if(objects[i].isBullet){//bullet hit physics
-                objects[i].getRanges();
                 for(var j = 0; j<objects.length;j++){
                     if(!objects[j].isBullet && objects[i] != undefined){
                         objects[j].getRanges();
@@ -445,17 +507,16 @@ body {
                 }
             }
             else{
-                var cam = {}
-                var sizeCam = 5;
-                cam.xRange = [camera.position.x-sizeCam,camera.position.x+sizeCam]
-                cam.yRange = [camera.position.y-sizeCam,camera.position.y+sizeCam]
-                cam.zRange = [camera.position.z-sizeCam,camera.position.z+sizeCam]
-                if(isHit(cam,objects[i])){
+                
+                if(isCamHit(objects[i]) ){
                     camera.gotHit = true;
-                    if(camera.gotHitPunish < 10){
-                        camera.gotHitPunish = 15;
+                    if(camera.gotHitPunish <= 0){
+                        camera.gotHitPunish = 1500;
+                        camera.hits++;
+                        updateAsteroidHitCount(camera.hits);
 
                     }
+
                 }
                 
             }

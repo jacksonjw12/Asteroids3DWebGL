@@ -259,6 +259,7 @@ function Camera(pos,rot,fov){
 
 	this.gotHit = false;
 	this.gotHitPunish = 0;
+	this.hits = 0;
 	this.fireBullet = false;
 	this.position = new point3d(-1.5,0,-7);//new point3d(-10,-40,20);
 	this.rotation = new point3d(0,0,0)
@@ -375,7 +376,7 @@ function Keyboard(){
 			camera.rotation.y+=.05*rotSp * this.rotWay;
 			
 		}
-		if(this.keysDown.indexOf(" ") > -1 && camera.stepsSinceBullet > 1000){
+		if(this.keysDown.indexOf(" ") > -1 && camera.stepsSinceBullet > 70){
 			camera.stepsSinceBullet = 0;
 			spawnBullet();
 		}
@@ -542,61 +543,96 @@ function point3d(x,y,z){
 
 
 
-function modelFromObj(obj, sideWays, centerPoint,isBullet=false){
-	var points = []
-	var faces = []
+function modelFromObj(obj, centerPoint,isBullet=false){
+	var vertices = [];
+	var indices = [];
+	var colors = [];
 	var currentColor = "#000000";
+	var rS = Math.random();
+	var gS = Math.random();
+	var bS = Math.random();
 	for(var l = 0; l<obj.length; l++){
+		if(l % 100 == 0){
+			rS = Math.random();
+			gS = Math.random();
+			bS = Math.random();
+		}
 		if(obj[l].charAt(0) == "v"){
 			var coords = obj[l].split(" ");
-			if(sideWays){
-				var x = 1*(coords[1])
-				var z = 1*(coords[2])
-				var y = 1*(coords[3])
-				points.push(new point3d(x,y,z))
-			}
-			else{
-				var x = 1*(coords[1])
-				var y = 1*(coords[2])
-				var z = 1*(coords[3])
-				points.push(new point3d(x,y,z))
-			}
+			vertices.push(coords[1]);
+			vertices.push(coords[2]);
+			vertices.push(coords[3]);
+				
+			
+			//colors = colors.concat([Math.random(),Math.random(),Math.random(),1]);
+			colors = colors.concat([(l/10+rS)%1,(l/10+gS)%1,(l/10+bS)%1,1]);
 			
 		}
 		else if(obj[l].charAt(0) == "u"){
 			var lineSplit = obj[l].split(" ");
-			var color = "#" + lineSplit[1]
+			var color = "#000000";
+			if(lineSplit[1] == "rand"){
+				color = "#aacc11"
+			}
+			else{
+				color = "#" + lineSplit[1]
+			}
+			
 			currentColor = color;
 		}
 		else if(obj[l].charAt(0) == "f"){
 			var pointIndexes = obj[l].split(" ");
-			var a = 1*(pointIndexes[1]);
-			var b = 1*(pointIndexes[2]);
-			var c = 1*(pointIndexes[3]);
-			//console.log(pointIndexes[1])
 			if(pointIndexes.length == 5){
-				var d = 1*(pointIndexes[4]);
-				var ps = [points[a-1],points[b-1],points[c-1],points[d-1]]
-				console.log(currentColor)
+				indices.push(pointIndexes[1]-1)
+				indices.push(pointIndexes[2]-1)
+				indices.push(pointIndexes[3]-1)
 
-				faces.push(new Face(ps,a,b,c,currentColor,d))
+				indices.push(pointIndexes[1]-1)
+				indices.push(pointIndexes[3]-1)
+				indices.push(pointIndexes[4]-1)
+
+
 			}
-			else{
-				var ps = [points[a-1],points[b-1],points[c-1]]
-				faces.push(new Face(ps,a,b,c,currentColor))
+			else if(pointIndexes.length == 4){
+				indices.push(pointIndexes[1]-1)
+				indices.push(pointIndexes[2]-1)
+				indices.push(pointIndexes[3]-1)
+			
 			}
+			
+			
 			
 		}
 		
 	}
-	//console.log(points[0])
+	//colors = colors.concat([Math.random(),1,0,1]);
+	//colors = colors.concat([Math.random(),1,0,1]);
+	//colors = colors.concat([Math.random(),1,0,1]);
+	
+	
+	
 
+	// var cubeVertexIndices = [
+	//   0,  1,  2,      0,  2,  3,    // front
+	//   4,  5,  6,      4,  6,  7,    // back
+	//   0,  4,  5,     0,  5, 1,   // top
+	//   1, 5, 6,     1, 6, 2,   // bottom
+	//   2, 6, 7,     2, 7, 3,   // right
+	//   4, 0, 3,     4, 3, 7   // left
+	// ];
+	//console.log(points[0]	)
+	var model;
 	if(centerPoint != undefined){
-		return new Model(faces, points, centerPoint,isBullet)
+		model = new gameObject(centerPoint,new point3d(0,0,0),new point3d(0,0,0),new point3d(0,0,0),vertices,indices,colors,-1)
+		return model
 	}
-	return new Model(faces,points,new point3d(0,0,0),isBullet)
+	else{
+		model = new gameObject(new point3d(camera.position.x,camera.position.y,camera.position.z),new point3d(0,0,0),new point3d(0,0,0),new point3d(0,0,0),vertices,indices,colors,-1)
+		return model
+	}
+	
 }
 
-
+//position, rotation,velocity,rotationalVelocity, vertices,indices,colors, timeToDeat
 
 
