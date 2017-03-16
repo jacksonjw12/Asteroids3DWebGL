@@ -81,7 +81,8 @@ body {
 
         gl.clearColor(0.2, 0.2, 0.2, 1.0);
         gl.enable(gl.DEPTH_TEST);
-
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+         gl.enable(gl.BLEND);
         drawScene();
         tick();
     }
@@ -208,9 +209,12 @@ body {
 
 	var triangleVertexPositionBuffer;
 	var triangleVertexColorBuffer;
-	
+	var fullScreenPositionBuffer;
+    var fullScreenColorBuffer;
+    var fullScreenIndexBuffer;
 	var objects = [];
     function initBuffers() {
+
         triangleVertexPositionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
         var vertices = [
@@ -233,6 +237,49 @@ body {
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 		triangleVertexColorBuffer.itemSize = 4;
 		triangleVertexColorBuffer.numItems = 3;
+
+
+
+
+        fullScreenPositionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, fullScreenPositionBuffer);
+        var vertices = [
+             -100.0,  -100.0,0,
+            -100.0, 100.0,0,
+             100.0, 100.0, 0,
+             100.0, -100.0,0,
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        fullScreenPositionBuffer.itemSize = 3;
+        fullScreenPositionBuffer.numItems = 4;
+
+        fullScreenIndexBuffer = gl.createBuffer();
+        var fullScreenIndexes = [
+            0,1,2,
+            0,2,3
+        ]
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, fullScreenIndexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(fullScreenIndexes), gl.STATIC_DRAW);
+
+
+        fullScreenColorBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, fullScreenColorBuffer);
+        var colors = [
+            1.0, 0.0, 0.0, 0.4,
+            1.0, 1.0, 0.0, 0.4,
+            1.0, 0.0, 0.0, 0.4,
+            1.0, 0.0, 0.0, 0.4,
+
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+        fullScreenColorBuffer.itemSize = 4;
+        fullScreenColorBuffer.numItems = 4;
+
+
+
+
+
 
 
 		//var cube = new renderObject();
@@ -307,6 +354,7 @@ body {
 	var rTri = 0;
   	var rSquare = 0;
   	screenPos = 0;
+    var screenFlash = 0;
     function drawScene() {
     	
 
@@ -314,11 +362,22 @@ body {
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+
+       
+
+
+
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 300.0, pMatrix);
 
         mat4.identity(mvMatrix);
+
+
+
+
         //console.log(camera.position.x)     //   ad     ws   qe
         mat4.translate(mvMatrix, [camera.position.x, camera.position.y, camera.position.z]);
+        
+
         if(camera.gotHit){
             mat4.translate(mvMatrix, [screenPos*Math.random(),screenPos*Math.random(),screenPos*Math.random()]);
         }
@@ -336,7 +395,7 @@ body {
     	gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, triangleVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
         
         setMatrixUniforms();
-        gl.drawArrays(gl.TRIANGLES, 0, triangleVertexPositionBuffer.numItems);
+        //gl.drawArrays(gl.TRIANGLES, 3, triangleVertexPositionBuffer.numItems);
 
         mvPopMatrix();
         //mat4.translate(mvMatrix, [-screenPos, 0.0, 0.0]);
@@ -364,6 +423,37 @@ body {
 	        mvPopMatrix();
 
         }
+
+        if(camera.gotHit){
+            screenFlash++;
+            if(screenFlash > 20){
+                screenFlash = 0;
+            }
+            else if(screenFlash < 10){
+                mvPushMatrix();
+
+                mat4.translate(mvMatrix, [-camera.position.x, -camera.position.y, -camera.position.z -1]);
+                mat4.ortho(-100,100,-100,100,.1,300, pMatrix);
+
+                gl.bindBuffer(gl.ARRAY_BUFFER, fullScreenPositionBuffer);
+                gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, fullScreenPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+                
+                gl.bindBuffer(gl.ARRAY_BUFFER, fullScreenColorBuffer);
+                gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, fullScreenColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, fullScreenIndexBuffer);
+                setMatrixUniforms();
+                gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT,0);
+                mvPopMatrix();
+            }
+
+        }
+
+        
+
+
+
+
+
        /* mvPushMatrix();
 
         mat4.translate(mvMatrix, [3.0, 0.0, 0.0]);
