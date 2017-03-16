@@ -108,7 +108,7 @@ body {
         pos.add(delPos)
         var b = bullet(.05,pos, camera.rotation,v,new point3d(0,1,0),10);
        // var cube = bullet(1,new point3d(-camera.position.x,camera.position.y,0), new point3d(0,0,0),new point3d(0,0,0),new point3d(0,1,0),1);
-       b.isBullet = true;
+        b.isBullet = true;
         objects.push(b);
         
     }
@@ -569,10 +569,11 @@ body {
 
             if(objects[i].isBullet){//bullet hit physics
                 for(var j = 0; j<objects.length;j++){
-                    if(!objects[j].isBullet && objects[i] != undefined){
+                    if(!objects[j].isBullet && !objects[j].isParticle && objects[i] != undefined){
                         objects[j].getRanges();
                         if(isHit(objects[i],objects[j])){
                             //objects[i].timeToDeath = 0;
+                            explosion(objects[i],objects[i].position.copyScale(1))
                             objects.splice(i,1)
                             objects[j].scale(.9);
                             objects[j].hits++;
@@ -594,6 +595,9 @@ body {
                         
                     }
                 }
+            }
+            else if(objects[i].isParticle){
+                objects[i].scale(.999)
             }
             else{
                 
@@ -624,6 +628,7 @@ body {
         return degrees * Math.PI / 180;
     }
     
+
 
 
 </script>

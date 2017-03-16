@@ -37,6 +37,69 @@ function cubeObject(size, position, rotation,velocity, rotVel){
 
 }
 
+function explosion(obj, pos){
+    var e = explosionObject(.1,pos,obj.rotation,new point3d(0,0,0), new point3d(0,0,0),1)
+
+    objects = objects.concat(e)
+   
+}
+
+function explosionObject(size, position, rotation,velocity, rotVel, timeToDeath){
+	var explosionObjects = []
+
+
+	var vertices = [
+	  // Front face
+	  1.0*size, -1.0*size,  -1.0*size,
+	   1.0*size, -1.0*size,  1.0*size,
+	   -1.0*size,  -1.0*size,  1.0*size,
+	  -1.0*size,  -1.0*size,  -1.0*size,
+	  
+	  // Back face
+	  1.0*size, 1.0*size, -1.0*size,
+	  1.0*size,  1.0*size, 1.0*size,
+	  -1.0*size,  1.0*size, 1.0*size,
+	  -1.0*size, 1.0*size, -1.0*size,
+	  
+	];
+	var colors = []
+	for (var c=0; c < 8; c++) {
+	  colors = colors.concat([1-Math.random()/2, Math.random()/2, Math.random()/2, 1.0]);
+	}
+
+
+	var cubeVertexIndices = [
+	  0,  1,  2,      0,  2,  3,    // front
+	  4,  5,  6,      4,  6,  7,    // back
+	  0,  4,  5,     0,  5, 1,   // top
+	  1, 5, 6,     1, 6, 2,   // bottom
+	  2, 6, 7,     2, 7, 3,   // right
+	  4, 0, 3,     4, 3, 7    // left
+	];	
+
+	for(var i = 0; i< 8; i++){
+		for(var j= 0; j< 8; j++){
+
+			
+			var newVel = new point3d(Math.cos(i*Math.PI/4),Math.sin(j*Math.PI/4),Math.sin(i*Math.PI/4) );
+			//newVel.scale(1/4);
+			newVel.normalize();
+			console.log(newVel)
+			var ex = new gameObject(position.copyScale(1),rotation,newVel,rotVel,vertices,cubeVertexIndices,colors, timeToDeath);
+			ex.isParticle = true;
+			explosionObjects.push(ex);
+
+		}
+
+
+	}
+	
+
+
+	return explosionObjects;
+}
+
+
 function bullet(size, position, rotation,velocity, rotVel, timeToDeath){
 	var vertices = [
 	  // Front face
@@ -78,7 +141,6 @@ function bullet(size, position, rotation,velocity, rotVel, timeToDeath){
 	];
 
 	var cube = new gameObject(position,rotation,velocity,rotVel,vertices,cubeVertexIndices,colors,timeToDeath);
-	
 
 	return cube;
 }
@@ -153,6 +215,7 @@ function gameObject(position, rotation,velocity,rotationalVelocity, vertices,ind
 	this.timeToDeath = timeToDeath;
 	this.isBullet = false;
 	this.hits = 0;
+	this.isParticle = false;
 	this.getRanges = function(){
 		var xMax = this.renderObject.vertices[0]+this.position.x;
 		var yMax = this.renderObject.vertices[1]+this.position.y
