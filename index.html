@@ -22,7 +22,7 @@ body {
 
 <script type="text/javascript" src="webgl-utils.js"></script>
 <script src="glMatrix-0.9.5.min.js"></script>
-<body onload="webGLStart();">
+<body onload="">
 <div id="info">
 <h3>Asteroids 3D</h3>
 <h4>WASD and arrow keys to control, space to shoot</h4>
@@ -115,6 +115,35 @@ body {
 	var keyboard = new Keyboard();
 
     var shaderPrograms = {"unTextured":null, "textured":null}
+
+    var texture;
+
+    texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+     
+    // Fill the texture with a 1x1 blue pixel.
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+                  new Uint8Array([0, 0, 255, 255]));
+
+
+    var image = new Image();
+    image.crossOrigin = ""
+
+    image.src = "https://jacksonjw12.github.io/Asteroids3DWebGL/spaceBox.jpg";
+    image.addEventListener('load', function() {
+        console.log(image)
+      // Now that the image has loaded make copy it to the texture.
+
+
+
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, image);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        webGLStart();
+
+
+    });
+
 
 
     function webGLStart() {
@@ -306,7 +335,6 @@ body {
     var fullScreenIndexBuffer;
 	var objects = [];
     var texObjects = [];
-    var texture;
     function initBuffers() {
 
         
@@ -356,28 +384,10 @@ body {
            gl.STATIC_DRAW);
 
     */
-        texture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-         
-        // Fill the texture with a 1x1 blue pixel.
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
-                      new Uint8Array([0, 0, 255, 255]));
+        
          
         // Asynchronously load an image
-        var image = new Image();
-        image.crossOrigin = ""
-
-        image.src = "https://jacksonjw12.github.io/Asteroids3DWebGL/spaceBox.jpg";
-        image.addEventListener('load', function() {
-            console.log(image)
-          // Now that the image has loaded make copy it to the texture.
-
-
-
-          gl.bindTexture(gl.TEXTURE_2D, texture);
-          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, image);
-          gl.generateMipmap(gl.TEXTURE_2D);
-        });
+        
         var vertices = [
         0,0,0,
         10,0,0,
