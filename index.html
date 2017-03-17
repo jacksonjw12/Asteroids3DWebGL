@@ -313,10 +313,10 @@ body {
 		//objects.push(cube);
 		var cube = bullet(1,new point3d(3,0,0), new point3d(0,0,0),new point3d(0,0,0),new point3d(0,1,0));
         cube.timeToDeath = -1;//lives forever
-		objects.push(cube);
+		//objects.push(cube);
         var startingAreaWidth = 200;
         var size = 10;
-		for(var j = 0; j<200; j++){
+		for(var j = 0; j<300; j++){
 
 
             var cube2 = asteroid(
@@ -335,7 +335,7 @@ body {
 
         var testScene = modelFromObj(testSceneObj, new point3d(0,-10,0));
         testScene.scale(1)
-        objects.push(testScene)
+        //objects.push(testScene)
 
 
         /*var bufferTex = gl.createBuffer();
