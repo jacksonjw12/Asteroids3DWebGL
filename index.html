@@ -314,7 +314,7 @@ body {
 		var cube = bullet(1,new point3d(3,0,0), new point3d(0,0,0),new point3d(0,0,0),new point3d(0,1,0));
         cube.timeToDeath = -1;//lives forever
 		//objects.push(cube);
-        var startingAreaWidth = 200;
+        var startingAreaWidth = 300;
         var size = 10;
 		for(var j = 0; j<300; j++){
 
@@ -421,7 +421,7 @@ body {
 
       
     ];
-    var size = 200;
+    var size = 10;
     var vertices = [
 
 
@@ -637,18 +637,52 @@ body {
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 500.0, pMatrix);
+        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
         
         mat4.identity(mvMatrix);//reset move matrix
 
+        mat4.rotate(pMatrix, camera.rotation.x, [1, 0, 0]);//set camera rotation
+        mat4.rotate(pMatrix, camera.rotation.y, [0, 1, 0]);//
         mat4.translate(mvMatrix, [camera.position.x, camera.position.y, camera.position.z]);//set cam position
+
+        gl.useProgram(shaderPrograms.textured);
+        //mat4.translate(mvMatrix, [camera.position.x, camera.position.y, camera.position.z]);//set cam position
+        mat4.translate(mvMatrix, [-camera.position.x, -camera.position.y, -camera.position.z]);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, texObjects[0].positionBuffer);
+        gl.vertexAttribPointer(shaderPrograms.textured.vertexPositionAttribute, texObjects[0].positionBuffer.itemSize, gl.FLOAT, false, 0, 0);
         
-        if(camera.gotHit){//shake camera
+        gl.bindBuffer(gl.ARRAY_BUFFER, texObjects[0].texBuffer);
+        gl.vertexAttribPointer(shaderPrograms.textured.texCoordAttribute, texObjects[0].texBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+       //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, texObjects[0].indexBuffer);
+        
+
+        setMatrixUniformsTex();
+        gl.drawArrays(gl.TRIANGLES, 0,36);//texObjects[0].vertices.length, gl.UNSIGNED_SHORT, 0);
+        
+        gl.clear(gl.DEPTH_BUFFER_BIT);
+
+
+        mat4.identity(mvMatrix);//reset move matrix
+
+
+
+        gl.useProgram(shaderPrograms.unTextured);
+
+       
+        
+        
+        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
+        
+        mat4.identity(mvMatrix);//reset move matrix
+
+        mat4.rotate(pMatrix, camera.rotation.x, [1, 0, 0]);//set camera rotation
+        mat4.rotate(pMatrix, camera.rotation.y, [0, 1, 0]);//
+        mat4.translate(mvMatrix, [camera.position.x, camera.position.y, camera.position.z]);//set cam position
+       	if(camera.gotHit){//shake camera
             mat4.translate(mvMatrix, [screenPos*Math.random(),screenPos*Math.random(),screenPos*Math.random()]);
         }
-
-       	mat4.rotate(pMatrix, camera.rotation.x, [1, 0, 0]);//set camera rotation
-        mat4.rotate(pMatrix, camera.rotation.y, [0, 1, 0]);//
         /*
         mvPushMatrix();//save matrix   *1
 
@@ -718,23 +752,7 @@ body {
        // mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 300.0, pMatrix);
         //lets draw a textured obj
 
-        gl.useProgram(shaderPrograms.textured);
-        //mat4.translate(mvMatrix, [camera.position.x, camera.position.y, camera.position.z]);//set cam position
-        mat4.translate(mvMatrix, [0,0,0]);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, texObjects[0].positionBuffer);
-        gl.vertexAttribPointer(shaderPrograms.textured.vertexPositionAttribute, texObjects[0].positionBuffer.itemSize, gl.FLOAT, false, 0, 0);
         
-        gl.bindBuffer(gl.ARRAY_BUFFER, texObjects[0].texBuffer);
-        gl.vertexAttribPointer(shaderPrograms.textured.texCoordAttribute, texObjects[0].texBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-       //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, texObjects[0].indexBuffer);
-        
-
-        setMatrixUniformsTex();
-        gl.drawArrays(gl.TRIANGLES, 0,36);//texObjects[0].vertices.length, gl.UNSIGNED_SHORT, 0);
-        
-
     }
 
 	var lastTime = 0;
