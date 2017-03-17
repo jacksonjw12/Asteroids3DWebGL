@@ -14,6 +14,14 @@ body {
 #info * {
      margin:0; 
 }
+#loading {
+    position:absolute;
+    top:30%;
+    width:100%;
+    z-index:-2;
+        text-align:center;
+
+}
 
 
 </style>
@@ -30,6 +38,10 @@ body {
 </div>
 
 <canvas id="canvas"></canvas>
+<div id="loading">
+        <h1>Loading...</h1>
+
+</div>
 
 </body>
 
@@ -140,6 +152,7 @@ body {
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, image);
         gl.generateMipmap(gl.TEXTURE_2D);
         webGLStart();
+        document.getElementById("loading").innerHTML =""
 
 
     });
