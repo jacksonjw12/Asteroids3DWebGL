@@ -15,6 +15,7 @@ body {
      margin:0; 
 }
 
+
 </style>
 <script src="Testscene.js"></script>
 <script src="suzanne.js"></script>
@@ -24,11 +25,12 @@ body {
 <body onload="webGLStart();">
 <div id="info">
 <h3>Asteroids 3D</h3>
-<h4>WASD and arrow keys to control, space to shoot</h5>
+<h4>WASD and arrow keys to control, space to shoot</h4>
 <h5 id="hitText"> You have been hit by an asteroid 0 times</h6>
 </div>
-<canvas id="canvas"></canvas>
 
+<canvas id="canvas"></canvas>
+<input id="test" type="text"></input>
 
 </body>
 
@@ -127,6 +129,15 @@ body {
          gl.enable(gl.BLEND);
         drawScene();
         tick();
+        
+        if (/iPad|iPhone|iPod/g.test(navigator.userAgent)) {
+             document.getElementById("test").focus();
+
+        }
+
+
+
+
     }
 
     function tick(){
