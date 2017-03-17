@@ -258,7 +258,66 @@ function gameObject(position, rotation,velocity,rotationalVelocity, vertices,ind
 }
 
 
+function renderObjectTex(gl,positionBuffer,texBuffer,indexBuffer){
+	this.positionBuffer = null;//gl.createBuffer();
+	this.texBuffer = null//gl.createBuffer();
+	this.indexBuffer = null//gl.createBuffer();
 
+	if(positionBuffer != undefined){
+		this.positionBuffer = positionBuffer;
+		
+	}
+	
+	if(indexBuffer != undefined){
+		this.indexBuffer = indexBuffer;
+		
+	}
+	this.scale = function(factor){
+		for(var i = 0; i<this.vertices.length; i++){
+			this.vertices[i]*=factor;
+
+		}
+		this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
+		this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices), this.gl.STATIC_DRAW);
+
+	}
+
+	this.setup = function(gl, vertices, indexes, texCoords){
+		this.vertices = vertices;
+		this.indexes = indexes;
+		this.texCoords = texCoords;
+		this.gl = gl
+
+		this.positionBuffer = gl.createBuffer();
+		
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+		
+		this.positionBuffer.itemSize = 3;
+        this.positionBuffer.numItems = vertices.length;
+
+        this.texBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.texBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texCoords), gl.STATIC_DRAW);
+
+        this.texBuffer.itemSize = 2;
+        this.texBuffer.numItems = texCoords.length;
+
+       	this.indexBuffer = gl.createBuffer();
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexes), gl.STATIC_DRAW);
+
+	}
+	this.delete = function(){
+		gl.delete(this.positionBuffer);
+		gl.delete(this.texBuffer);
+		gl.delete(this.indexBuffer);
+
+	}
+
+}
 
 
 function renderObject(gl, positionBuffer, colorBuffer, indexBuffer){//object space
@@ -284,7 +343,7 @@ function renderObject(gl, positionBuffer, colorBuffer, indexBuffer){//object spa
 
 		}
 		this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
-		this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices), this.gl.STREAM_DRAW);
+		this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices), this.gl.STATIC_DRAW);
 
 	}
 
@@ -298,14 +357,14 @@ function renderObject(gl, positionBuffer, colorBuffer, indexBuffer){//object spa
 		
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STREAM_DRAW);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 		
 		this.positionBuffer.itemSize = 3;
         this.positionBuffer.numItems = vertices.length;
 
         this.colorBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STREAM_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
         this.colorBuffer.itemSize = 4;
         this.colorBuffer.numItems = colors.length;
@@ -336,7 +395,7 @@ function Camera(pos,rot,fov){
 	this.gotHitPunish = 0;
 	this.hits = 0;
 	this.fireBullet = false;
-	this.position = new point3d(-1.5,0,-7);//new point3d(-10,-40,20);
+	this.position = new point3d(-1.5,0,-20);//new point3d(-10,-40,20);
 	this.rotation = new point3d(0,0,0)
 	this.fov = Math.PI/2;
 	this.stepsSinceBullet = 10;
@@ -613,7 +672,130 @@ function point3d(x,y,z){
 
 
 
+function texModelFromObj(obj, centerPoint,isBullet=false){
+	var vertices = [];
+	var indices = [];
+	var colors = [];
+	var texCoords = [];
+	var currentColor = "#000000";
+	var rS = Math.random();
+	var gS = Math.random();
+	var bS = Math.random();
+	for(var l = 0; l<obj.length; l++){
+		if(l % 100 == 0){
+			rS = Math.random();
+			gS = Math.random();
+			bS = Math.random();
+		}
+		if(obj[l].charAt(0) == "v"){
+			
+				var coords = obj[l].split(" ");
+				vertices.push(coords[1]);
+				vertices.push(coords[2]);
+				vertices.push(coords[3]);
+			
+				
+				//colors = colors.concat([Math.random(),Math.random(),Math.random(),1]);
+				colors = colors.concat([(l/10+rS)%1,(l/10+gS)%1,(l/10+bS)%1,1]);
+			
+			
+			
+		}
+		else if(obj[l].charAt(0) == "u"){
+			var lineSplit = obj[l].split(" ");
+			var color = "#000000";
+			if(lineSplit[1] == "rand"){
+				color = "#aacc11"
+			}
+			else{
+				color = "#" + lineSplit[1]
+			}
+			
+			currentColor = color;
+		}
+		else if(obj[l].charAt(0) == "f"){
+			var pointIndexes = obj[l].split(" ");
 
+			var pointIndexes = obj[l].split(" ");
+			if(pointIndexes.length == 5){
+				indices.push(pointIndexes[1]-1)
+				indices.push(pointIndexes[2]-1)
+				indices.push(pointIndexes[3]-1)
+
+				indices.push(pointIndexes[1]-1)
+				indices.push(pointIndexes[3]-1)
+				indices.push(pointIndexes[4]-1)
+
+
+			}
+			else if(pointIndexes.length == 10){
+				indices.push(pointIndexes[1]-1)
+				indices.push(pointIndexes[2]-1)
+				indices.push(pointIndexes[3]-1)
+
+				indices.push(pointIndexes[1]-1)
+				indices.push(pointIndexes[3]-1)
+				indices.push(pointIndexes[4]-1)
+				
+
+			}
+			else if(pointIndexes.length == 4){
+				indices.push(pointIndexes[1]-1)
+				indices.push(pointIndexes[2]-1)
+				indices.push(pointIndexes[3]-1)
+			
+			}
+
+			var blah = l/obj.length*4
+
+
+			if(pointIndexes.length == 5){
+				// texCoords.push(0)
+				// texCoords.push(1)
+				// texCoords.push(2)
+
+				// texCoords.push(0)
+				// texCoords.push(2)
+				// texCoords.push(3)
+				texCoords = texCoords.concat([0,0,blah,0,blah,blah,0,0,blah,blah,0,blah])
+
+
+			}
+			else if(pointIndexes.length == 4){
+				// texCoords.push(0)
+				// texCoords.push(1)
+				// texCoords.push(2)
+				texCoords = texCoords.concat([0,0,blah,0,blah,blah])
+
+			}
+			
+			
+			
+		}
+		
+	}
+	//colors = colors.concat([Math.random(),1,0,1]);
+	//colors = colors.concat([Math.random(),1,0,1]);
+	//colors = colors.concat([Math.random(),1,0,1]);
+	
+	
+	
+
+	// var cubeVertexIndices = [
+	//   0,  1,  2,      0,  2,  3,    // front
+	//   4,  5,  6,      4,  6,  7,    // back
+	//   0,  4,  5,     0,  5, 1,   // top
+	//   1, 5, 6,     1, 6, 2,   // bottom
+	//   2, 6, 7,     2, 7, 3,   // right
+	//   4, 0, 3,     4, 3, 7   // left
+	// ];
+	//console.log(points[0]	)
+	var t = new renderObjectTex();
+	t.setup(gl, vertices, indices, texCoords);
+	return t;
+	
+	
+}
 
 
 
@@ -707,7 +889,55 @@ function modelFromObj(obj, centerPoint,isBullet=false){
 	}
 	
 }
+var Simple1DNoise = function() {
+    var MAX_VERTICES = 256;
+    var MAX_VERTICES_MASK = MAX_VERTICES -1;
+    var amplitude = 1;
+    var scale = 1;
 
+    var r = [];
+
+    for ( var i = 0; i < MAX_VERTICES; ++i ) {
+        r.push(Math.random());
+    }
+
+    var getVal = function( x ){
+        var scaledX = x * scale;
+        var xFloor = Math.floor(scaledX);
+        var t = scaledX - xFloor;
+        var tRemapSmoothstep = t * t * ( 3 - 2 * t );
+
+        /// Modulo using &
+        var xMin = xFloor & MAX_VERTICES_MASK;
+        var xMax = ( xMin + 1 ) & MAX_VERTICES_MASK;
+
+        var y = lerp( r[ xMin ], r[ xMax ], tRemapSmoothstep );
+
+        return y * amplitude;
+    };
+
+    /**
+    * Linear interpolation function.
+    * @param a The lower integer value
+    * @param b The upper integer value
+    * @param t The value between the two
+    * @returns {number}
+    */
+    var lerp = function(a, b, t ) {
+        return a * ( 1 - t ) + b * t;
+    };
+
+    // return the API
+    return {
+        getVal: getVal,
+        setAmplitude: function(newAmplitude) {
+            amplitude = newAmplitude;
+        },
+        setScale: function(newScale) {
+            scale = newScale;
+        }
+    };
+};
 //position, rotation,velocity,rotationalVelocity, vertices,indices,colors, timeToDeat
 
 
