@@ -455,13 +455,19 @@ function Keyboard(){
 
 	})
 	
-	
+	this.drugsTimeOut = 100;
 	this.rotWay = 1;
 	camera.vel = new point3d(0,0,0)
 	this.doMovement = function(camera){
 		var dC = new Date();
 		var dt = dC-this.prevTime
-
+		if(this.drugsTimeOut > 0){
+			this.drugsTimeOut -= dt;
+			if(this.drugsTimeOut < 0){
+				this.drugsTimeOut = 0;
+			}
+		}
+		
 		var rotSp =.05
 		var movement = new point3d(0,0,0)
 		if(this.keysDown.indexOf("Q") > -1){
@@ -513,6 +519,10 @@ function Keyboard(){
 		if(this.keysDown.indexOf(" ") > -1 && camera.stepsSinceBullet > 70){
 			camera.stepsSinceBullet = 0;
 			spawnBullet();
+		}
+		if(this.keysDown.indexOf("0") > -1 && this.drugsTimeOut == 0){
+			drugs = !drugs;
+			this.drugsTimeOut = 500;
 		}
 		camera.rotVel.add( camera.rotation.vectorTo(prevRot));
 

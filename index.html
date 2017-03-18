@@ -125,7 +125,7 @@ body {
 	var ticks = 0;
 	var camera = new Camera();
 	var keyboard = new Keyboard();
-
+    var drugs = false;
     var shaderPrograms = {"unTextured":null, "textured":null}
 
     var texture;
@@ -328,7 +328,14 @@ body {
         
         gl.uniformMatrix4fv(shaderPrograms.unTextured.pMatrixUniform, false, pMatrix);
         gl.uniformMatrix4fv(shaderPrograms.unTextured.mvMatrixUniform, false, mvMatrix);
-        gl.uniform1f(shaderPrograms.unTextured.randValUniform, val);//.2+generator.getVal(randValX));
+        if(drugs){
+            gl.uniform1f(shaderPrograms.unTextured.randValUniform, .2+generator.getVal(randValX));
+
+        }
+        else{
+            gl.uniform1f(shaderPrograms.unTextured.randValUniform, val);
+
+        }
 
     }
     function setMatrixUniformsTex(){
